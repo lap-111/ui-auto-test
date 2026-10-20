@@ -1,0 +1,11 @@
+# 记账模块测试数据（数据驱动）
+invalid_amount:
+  - amount: "0"
+    error: "金额必须大于 0"
+  - amount: "-5"
+    error: "金额必须大于 0"
+
+special_notes:
+  - "双\"引号'单引号"
+  - "<b>加粗</b>"
+  - "<img src=x onerror=\"document.title='HACKED'\">"

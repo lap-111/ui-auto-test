@@ -1,0 +1,22 @@
+# 认证模块测试数据（数据驱动）
+invalid_login:
+  - username: admin
+    password: wrong-password
+    error: "用户名或密码错误"
+  - username: nobody_exists
+    password: "123456"
+    error: "用户名或密码错误"
+  - username: admin
+    password: ""
+    error: "用户名或密码错误"
+
+invalid_register:
+  - username: ""
+    password: "123456"
+    error: "用户名和密码不能为空"
+  - username: admin
+    password: ""
+    error: "用户名和密码不能为空"
+  - username: admin
+    password: "123456"
+    error: "用户名已存在"

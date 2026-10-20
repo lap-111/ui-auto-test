@@ -49,7 +49,7 @@ CREATE TABLE IF NOT EXISTS sessions (
 
 def get_db():
     """FastAPI 依赖：每个请求一个连接。"""
-    conn = sqlite3.connect(DB_PATH)
+    conn = sqlite3.connect(DB_PATH, check_same_thread=False)
     conn.row_factory = sqlite3.Row
     conn.execute("PRAGMA foreign_keys = ON")
     try:

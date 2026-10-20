@@ -9,6 +9,37 @@ const state = {
 
 const app = document.getElementById("app");
 
+/* ---------- 全局确认弹窗（替代浏览器 confirm，便于自动化） ---------- */
+let confirmModalEl = null;
+function openConfirm(message, onOk) {
+  if (!confirmModalEl) {
+    const div = document.createElement("div");
+    div.className = "modal";
+    div.dataset.testid = "confirm-modal";
+    div.hidden = true;
+    div.innerHTML = `
+      <div class="modal-box card">
+        <p data-testid="confirm-message" id="confirm-message" style="margin-bottom:14px"></p>
+        <div class="row">
+          <button class="btn danger" data-testid="confirm-ok" id="confirm-ok">确定</button>
+          <button class="btn secondary" data-testid="confirm-cancel" id="confirm-cancel">取消</button>
+        </div>
+      </div>`;
+    document.body.appendChild(div);
+    confirmModalEl = div;
+    div.querySelector("#confirm-ok").onclick = () => {
+      div.hidden = true;
+      const cb = div.__mkcb;
+      div.__mkcb = null;
+      if (cb) cb();
+    };
+    div.querySelector("#confirm-cancel").onclick = () => { div.hidden = true; div.__mkcb = null; };
+  }
+  confirmModalEl.querySelector("#confirm-message").textContent = message;
+  confirmModalEl.__mkcb = onOk;
+  confirmModalEl.hidden = false;
+}
+
 function esc(s) {
   return String(s ?? "").replace(/[&<>"']/g, (c) => ({
     "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;",
@@ -107,6 +138,7 @@ function renderView() {
 async function renderBills(el) {
   const today = new Date().toISOString().slice(0, 10);
   const curMonth = today.slice(0, 7);
+  let editId = 0;
   el.innerHTML = `
     <div class="card">
       <h2>记一笔</h2>
@@ -132,6 +164,18 @@ async function renderBills(el) {
         <button class="btn secondary sm" data-testid="bill-page-prev" id="page-prev">上一页</button>
         <span data-testid="bill-page-info" id="page-info"></span>
         <button class="btn secondary sm" data-testid="bill-page-next" id="page-next">下一页</button>
+      </div>
+    </div>
+    <div class="modal" id="edit-modal" data-testid="edit-modal" hidden>
+      <div class="modal-box card">
+        <h2>编辑账单</h2>
+        <div class="form-item"><label>金额</label><input data-testid="edit-amount" id="edit-amount" type="number" step="0.01" min="0.01"></div>
+        <div class="form-item"><label>备注</label><input data-testid="edit-note" id="edit-note"></div>
+        <div class="row">
+          <button class="btn" data-testid="edit-save" id="edit-save">保存</button>
+          <button class="btn secondary" data-testid="edit-cancel" id="edit-cancel">取消</button>
+        </div>
+        <div class="error" data-testid="edit-error" id="edit-error"></div>
       </div>
     </div>`;
 
@@ -172,6 +216,9 @@ async function renderBills(el) {
   };
   document.getElementById("filter-reset").onclick = () => doFilter(true);
   document.getElementById("filter-keyword").onchange = () => doFilter(false);
+  document.getElementById("filter-keyword").addEventListener("keydown", (e) => {
+    if (e.key === "Enter") doFilter(false);
+  });
   document.getElementById("filter-category").onchange = () => doFilter(false);
   document.getElementById("filter-month").onchange = () => doFilter(false);
 
@@ -237,24 +284,40 @@ async function renderBills(el) {
     });
 
     list.querySelectorAll("[data-testid^='bill-edit-']").forEach((btn) => {
-      btn.onclick = async () => {
-        const id = btn.dataset.testid.replace("bill-edit-", "");
-        const bill = data.items.find((b) => b.id === Number(id));
-        const note = prompt("编辑备注", bill.note);
-        if (note === null) return;
-        await api("/bills/" + id, {
-          method: "PUT",
-          body: JSON.stringify({ category_id: bill.category_id, amount: bill.amount, note, bill_date: bill.bill_date }),
-        });
-        await loadBills();
+      btn.onclick = () => {
+        const id = Number(btn.dataset.testid.replace("bill-edit-", ""));
+        const bill = data.items.find((b) => b.id === id);
+        editId = id;
+        document.getElementById("edit-amount").value = bill.amount;
+        document.getElementById("edit-note").value = bill.note;
+        document.getElementById("edit-error").textContent = "";
+        document.getElementById("edit-modal").hidden = false;
       };
     });
-    list.querySelectorAll("[data-testid^='bill-del-']").forEach((btn) => {
-      btn.onclick = async () => {
-        const id = btn.dataset.testid.replace("bill-del-", "");
-        if (!confirm("确定删除该账单？")) return;
-        await api("/bills/" + id, { method: "DELETE" });
+    document.getElementById("edit-cancel").onclick = () => {
+      document.getElementById("edit-modal").hidden = true;
+    };
+    document.getElementById("edit-save").onclick = async () => {
+      try {
+        const amount = Number(document.getElementById("edit-amount").value);
+        const note = document.getElementById("edit-note").value;
+        if (!(amount > 0)) throw new Error("金额必须大于 0");
+        const bill = data.items.find((b) => b.id === editId);
+        await api("/bills/" + editId, {
+          method: "PUT",
+          body: JSON.stringify({ category_id: bill.category_id, amount, note, bill_date: bill.bill_date }),
+        });
+        document.getElementById("edit-modal").hidden = true;
         await loadBills();
+      } catch (e) { document.getElementById("edit-error").textContent = e.message; }
+    };
+    list.querySelectorAll("[data-testid^='bill-del-']").forEach((btn) => {
+      btn.onclick = () => {
+        const id = Number(btn.dataset.testid.replace("bill-del-", ""));
+        openConfirm("确定删除该账单？", async () => {
+          await api("/bills/" + id, { method: "DELETE" });
+          await loadBills();
+        });
       };
     });
   }
@@ -304,12 +367,14 @@ async function renderCategories(el) {
         </span>
       </div>`).join("");
     list.querySelectorAll("[data-id]").forEach((btn) => {
-      btn.onclick = async () => {
-        if (!confirm("确定删除该分类？")) return;
-        try {
-          await api("/categories/" + btn.dataset.id, { method: "DELETE" });
-          await loadCats();
-        } catch (e) { document.getElementById("cat-error").textContent = e.message; }
+      btn.onclick = () => {
+        const id = Number(btn.dataset.id);
+        openConfirm("确定删除该分类？", async () => {
+          try {
+            await api("/categories/" + id, { method: "DELETE" });
+            await loadCats();
+          } catch (e) { document.getElementById("cat-error").textContent = e.message; }
+        });
       };
     });
   }

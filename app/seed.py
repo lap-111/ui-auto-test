@@ -93,7 +93,7 @@ def seed(conn: sqlite3.Connection) -> None:
 def reset_and_seed() -> None:
     """重置数据库并写入种子数据（供 /api/dev/reset 与测试前置使用）。"""
     reset_db()
-    conn = sqlite3.connect(DB_PATH)
+    conn = sqlite3.connect(DB_PATH, check_same_thread=False)
     conn.row_factory = sqlite3.Row
     conn.execute("PRAGMA foreign_keys = ON")
     try:
