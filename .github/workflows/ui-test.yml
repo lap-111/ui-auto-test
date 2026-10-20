@@ -46,24 +46,13 @@ jobs:
           path: allure-results
           retention-days: 30
 
-      - name: 加载测试报告历史
-        uses: actions/checkout@v4
+      - name: 安装 Allure CLI
         if: ${{ !cancelled() }}
-        continue-on-error: true
-        with:
-          ref: gh-pages
-          path: gh-pages
+        run: npm install -g allure-commandline
 
       - name: 生成 Allure 报告
-        uses: simple-elf/allure-report-action@master
         if: ${{ !cancelled() }}
-        id: allure-report
-        with:
-          allure_results: allure-results
-          gh_pages: gh-pages
-          allure_report: allure-report
-          keep_history: true
-          report_url: /ui-auto-test/
+        run: allure generate allure-results -o allure-report --clean
 
       - name: 部署报告到 GitHub Pages
         if: ${{ !cancelled() }}
@@ -71,4 +60,4 @@ jobs:
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           publish_branch: gh-pages
-          publish_dir: gh-pages
+          publish_dir: allure-report
