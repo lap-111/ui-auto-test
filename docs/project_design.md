@@ -132,9 +132,10 @@ ui_auto_test/
 ## 5. CI/CD 设计
 
 - `.github/workflows/ui-test.yml`：
-  - 触发：push / pull_request（跑 smoke）、定时 cron 每日 02:00（跑全量）
-  - 步骤：checkout → setup-python → install → install playwright → 启动 app → 跑 pytest → 上传 Allure 报告 → 部署 GitHub Pages
-- 报告地址固定为 GitHub Pages 链接，供简历/面试展示。
+  - 触发：push / pull_request（跑 smoke+regression）、定时 cron 每日 02:00（跑全量）、手动触发
+  - 步骤：checkout → setup-python → install → install playwright → 启动 app → 跑 pytest → 采集 Allure 结果 → 生成报告 → 部署 GitHub Pages
+- 报告固定部署到 GitHub Pages，供简历/面试展示。
+- 本地生成报告：`allure generate allure-results -o allure-report`，托管：`python -m http.server 8082 --directory allure-report`。
 
 ## 6. 里程碑与验收标准
 

@@ -1,0 +1,74 @@
+name: UI 自动化回归
+
+on:
+  push:
+    branches: [main, master]
+  pull_request:
+    branches: [main, master]
+  schedule:
+    # 每日全量回归
+    - cron: "0 2 * * *"
+  workflow_dispatch:
+
+jobs:
+  ui-test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: 设置 Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: 安装依赖
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements-dev.txt
+
+      - name: 安装 Playwright 浏览器
+        run: python -m playwright install --with-deps chromium
+
+      - name: 启动被测应用并执行冒烟+回归用例
+        run: |
+          python -m uvicorn app.main:app --host 127.0.0.1 --port 8000 &
+          sleep 3
+          python -m pytest -m "smoke or regression"
+        env:
+          SEED_BUGS: "0"
+
+      - name: 采集 Allure 结果
+        if: ${{ !cancelled() }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: allure-results
+          path: allure-results
+          retention-days: 30
+
+      - name: 加载测试报告历史
+        uses: actions/checkout@v4
+        if: ${{ !cancelled() }}
+        continue-on-error: true
+        with:
+          ref: gh-pages
+          path: gh-pages
+
+      - name: 生成 Allure 报告
+        uses: simple-elf/allure-report-action@master
+        if: ${{ !cancelled() }}
+        id: allure-report
+        with:
+          allure_results: allure-results
+          gh_pages: gh-pages
+          allure_report: allure-report
+          keep_history: true
+          report_url: /ui_auto_test/
+
+      - name: 部署报告到 GitHub Pages
+        if: ${{ !cancelled() }}
+        uses: peaceiris/actions-gh-pages@v4
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_branch: gh-pages
+          publish_dir: gh-pages

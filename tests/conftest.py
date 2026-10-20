@@ -55,3 +55,22 @@ def admin_login(reset_env, page: Page, base_url: str) -> Page:
     """以种子账号登录后返回页面。"""
     LoginPage(page).open(base_url).login("admin", "123456")
     return page
+
+
+def pytest_runtest_makereport(item, call):
+    """失败时附加全页截图到 Allure 报告。"""
+    if call.when == "call" and call.excinfo is not None:
+        page = item.funcargs.get("page")
+        if page is not None:
+            try:
+                import allure
+
+                shot = page.screenshot(full_page=True)
+                allure.attach(
+                    shot,
+                    name="失败截图",
+                    attachment_type=allure.attachment_type.PNG,
+                )
+            except Exception:
+                # 截图失败不影响用例结果
+                pass
