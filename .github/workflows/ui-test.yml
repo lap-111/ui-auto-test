@@ -63,7 +63,7 @@ jobs:
           gh_pages: gh-pages
           allure_report: allure-report
           keep_history: true
-          report_url: /ui_auto_test/
+          report_url: /ui-auto-test/
 
       - name: 部署报告到 GitHub Pages
         if: ${{ !cancelled() }}
