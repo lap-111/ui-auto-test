@@ -15,6 +15,10 @@ playwright-report/
 allure-results/
 allure-report/
 
+# 数据库
+*.db
+*.sqlite3
+
 # Logs
 *.log
 logs/
