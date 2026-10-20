@@ -64,7 +64,11 @@ function renderAuth(isRegister) {
 }
 
 /* ---------- 主界面 ---------- */
-function renderApp() {
+async function renderApp() {
+  if (!state.features) {
+    try { state.features = await api("/dev/features"); }
+    catch (_) { state.features = { xss: false }; }
+  }
   app.innerHTML = `
     <div class="topbar">
       <h1>MoneyKeeper</h1>
@@ -190,37 +194,67 @@ async function renderBills(el) {
       list.innerHTML = '<div class="muted">暂无账单</div>';
       return;
     }
-    // 注意：note 使用 innerHTML 渲染（缺陷 D2 埋点，正文禁止 XSS）
-    list.innerHTML = data.items.map((b) => `
-      <div class="list-item" data-testid="bill-row-${b.id}">
-        <div>
-          <div>${esc(b.category_name)} · <span data-testid="bill-note-${b.id}">${b.note}</span></div>
-          <div class="muted">${b.bill_date}</div>
-        </div>
-        <div class="row">
-          <span class="amount ${b.category_type}" data-testid="bill-amount-${b.id}">${b.category_type === "income" ? "+" : "-"}${b.amount.toFixed(2)}</span>
-          <button class="btn secondary sm" data-testid="bill-edit-${b.id}" data-id="${b.id}">编辑</button>
-          <button class="btn danger sm" data-testid="bill-del-${b.id}" data-id="${b.id}">删除</button>
-        </div>
-      </div>`).join("");
+    list.innerHTML = "";
+    // 缺陷 D2 注入路径：xss 开关开启时备注按 innerHTML 渲染，否则按文本渲染
+    const renderNote = state.features && state.features.xss;
+    data.items.forEach((b) => {
+      const row = document.createElement("div");
+      row.className = "list-item";
+      row.dataset.testid = `bill-row-${b.id}`;
+      const left = document.createElement("div");
+      const top = document.createElement("div");
+      top.textContent = b.category_name + " · ";
+      const noteSpan = document.createElement("span");
+      noteSpan.dataset.testid = `bill-note-${b.id}`;
+      if (renderNote) noteSpan.innerHTML = b.note;
+      else noteSpan.textContent = b.note;
+      top.appendChild(noteSpan);
+      const date = document.createElement("div");
+      date.className = "muted";
+      date.textContent = b.bill_date;
+      left.appendChild(top);
+      left.appendChild(date);
+      const right = document.createElement("span");
+      right.className = "row";
+      const amt = document.createElement("span");
+      amt.className = "amount " + b.category_type;
+      amt.dataset.testid = `bill-amount-${b.id}`;
+      amt.textContent = (b.category_type === "income" ? "+" : "-") + b.amount.toFixed(2);
+      const editBtn = document.createElement("button");
+      editBtn.className = "btn secondary sm";
+      editBtn.dataset.testid = `bill-edit-${b.id}`;
+      editBtn.textContent = "编辑";
+      const delBtn = document.createElement("button");
+      delBtn.className = "btn danger sm";
+      delBtn.dataset.testid = `bill-del-${b.id}`;
+      delBtn.textContent = "删除";
+      right.appendChild(amt);
+      right.appendChild(editBtn);
+      right.appendChild(delBtn);
+      row.appendChild(left);
+      row.appendChild(right);
+      list.appendChild(row);
+    });
 
-    list.querySelectorAll("[data-id]").forEach((btn) => {
+    list.querySelectorAll("[data-testid^='bill-edit-']").forEach((btn) => {
       btn.onclick = async () => {
-        const id = btn.dataset.id;
-        if (btn.textContent === "删除") {
-          if (!confirm("确定删除该账单？")) return;
-          await api("/bills/" + id, { method: "DELETE" });
-          await loadBills();
-        } else {
-          const bill = data.items.find((b) => b.id === Number(id));
-          const note = prompt("编辑备注", bill.note);
-          if (note === null) return;
-          await api("/bills/" + id, {
-            method: "PUT",
-            body: JSON.stringify({ category_id: bill.category_id, amount: bill.amount, note, bill_date: bill.bill_date }),
-          });
-          await loadBills();
-        }
+        const id = btn.dataset.testid.replace("bill-edit-", "");
+        const bill = data.items.find((b) => b.id === Number(id));
+        const note = prompt("编辑备注", bill.note);
+        if (note === null) return;
+        await api("/bills/" + id, {
+          method: "PUT",
+          body: JSON.stringify({ category_id: bill.category_id, amount: bill.amount, note, bill_date: bill.bill_date }),
+        });
+        await loadBills();
+      };
+    });
+    list.querySelectorAll("[data-testid^='bill-del-']").forEach((btn) => {
+      btn.onclick = async () => {
+        const id = btn.dataset.testid.replace("bill-del-", "");
+        if (!confirm("确定删除该账单？")) return;
+        await api("/bills/" + id, { method: "DELETE" });
+        await loadBills();
       };
     });
   }
