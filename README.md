@@ -116,17 +116,18 @@ $env:SEED_BUGS = "1"; .\.venv\Scripts\python -m pytest -m p1    # D1/D2/D3 用�
 
 ## 简历亮点话术
 
-**MoneyKeeper UI 自动化测试平台**（个人项目）｜2026.10
-在线报告：https://lap-111.github.io/ui-auto-test/ ｜ 仓库：https://github.com/lap-111/ui-auto-test
-技术栈：Playwright 1.50 · Pytest · Python 3.11 · FastAPI · SQLite · Allure · GitHub Actions
+**MoneyKeeper UI 自动化测试**（个人项目）｜2026.09 - 至今
 
-> **项目描述**：自研 FastAPI 记账应用作为被测对象，独立设计并落地「被测应用 + 自动化框架 + 报告 + CI」完整闭环，产出 54 条 UI 自动化用例。
-> - 基于 **POM 页面对象模式 + YAML 数据驱动**搭建测试框架，分层封装 base/pages/api/utils，实现用例与元素定位解耦，定位符变更仅需改动单页类
-> - 通过**接口造数**完成用例间数据隔离与前置构造，配合 Playwright 自动等待与 `expect` 断言，杜绝 sleep，54 条用例全绿且稳定可重复执行
-> - 实现失败自动**全页截图 + trace 录屏**，结合 Allure 生成结构化报告；集成 **GitHub Actions** 实现 PR 自动回归 + 每日定时全量，报告自动部署 **GitHub Pages**
-> - 在被测应用中预埋 3 个隐藏缺陷（金额汇总不刷新 / XSS 特殊字符 / 分类重名提示异常），用例**真实捕获全部 3 个 Bug**，验证了框架的有效性与可发现缺陷能力
+项目描述：自研记账 Web 应用作为被测对象，独立搭建 Playwright 自动化测试框架，完成「被测应用 → 用例执行 → 报告展示 → CI 持续回归」全流程闭环；从需求设计、框架搭建到 CI 部署均由个人独立完成。
 
-**面试可展开点**：① 为什么自建被测应用而非第三方站；② POM 分层与解耦的价值；③ 3 个 Bug 是如何被用例捕获的（推荐讲 D1 金额汇总场景）。
+技术栈：Playwright + Pytest + Python + FastAPI + SQLite + Allure + GitHub Actions　｜　[在线报告](https://lap-111.github.io/ui-auto-test/)　｜　[GitHub](https://github.com/lap-111/ui-auto-test)
+
+项目职责：
+- **项目闭环**：自研 FastAPI 记账应用作为被测对象，独立完成「被测应用—用例执行—报告展示—CI 回归」闭环，产出 54 条 UI 自动化用例。
+- **框架设计**：采用 POM + YAML 数据驱动，分层封装 base / pages / api / utils，实现用例与元素定位解耦，定位变更只需修改对应页面类。
+- **稳定性**：通过接口造数完成用例数据隔离与前置构造，以 Playwright 自动等待和 expect 断言替代 sleep，54 条用例稳定通过、可重复执行。
+- **缺陷验证**：在被测应用中预埋金额汇总不刷新、XSS 特殊字符、分类重名提示异常 3 个缺陷，用例全部真实捕获，验证了框架的有效性。
+- **报告与 CI**：失败自动全页截图 + trace 录屏，Allure 输出结构化报告；GitHub Actions 实现 PR 自动回归 + 每日定时全量，报告自动部署 Pages。
 
 ## 文档
 
