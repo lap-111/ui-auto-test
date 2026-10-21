@@ -40,6 +40,19 @@ function openConfirm(message, onOk) {
   confirmModalEl.hidden = false;
 }
 
+function localDateStr() {
+  // 本地日期 YYYY-MM-DD（避免 toISOString 的 UTC 时区偏差）
+  const d = new Date();
+  const m = String(d.getMonth() + 1).padStart(2, "0");
+  const day = String(d.getDate()).padStart(2, "0");
+  return `${d.getFullYear()}-${m}-${day}`;
+}
+
+function localMonthStr() {
+  const d = new Date();
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
+}
+
 function esc(s) {
   return String(s ?? "").replace(/[&<>"']/g, (c) => ({
     "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;",
@@ -136,7 +149,7 @@ function renderView() {
 
 /* ---------- 账单 ---------- */
 async function renderBills(el) {
-  const today = new Date().toISOString().slice(0, 10);
+  const today = localDateStr();
   const curMonth = today.slice(0, 7);
   let editId = 0;
   el.innerHTML = `
@@ -383,7 +396,7 @@ async function renderCategories(el) {
 
 /* ---------- 统计 ---------- */
 async function renderStats(el) {
-  const curMonth = new Date().toISOString().slice(0, 7);
+  const curMonth = localMonthStr();
   el.innerHTML = `
     <div class="card">
       <div class="row">
