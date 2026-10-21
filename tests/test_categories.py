@@ -1,4 +1,5 @@
 """分类模块用例。"""
+import allure
 import pytest
 from playwright.sync_api import expect
 
@@ -6,6 +7,8 @@ from api import factories as f
 from pages.category_page import CategoryPage
 
 
+@allure.feature("分类模块")
+@allure.story("列表")
 @pytest.mark.regression
 def test_seed_categories_count(admin_login):
     """种子数据包含 5 个分类。"""
@@ -14,6 +17,8 @@ def test_seed_categories_count(admin_login):
     cat.expect_row_count(5)
 
 
+@allure.feature("分类模块")
+@allure.story("新增")
 @pytest.mark.regression
 def test_add_expense_category(admin_login):
     """新增支出分类并展示。"""
@@ -23,6 +28,8 @@ def test_add_expense_category(admin_login):
     cat.expect_row_count(6)
 
 
+@allure.feature("分类模块")
+@allure.story("新增")
 @pytest.mark.regression
 def test_add_income_category(admin_login):
     """新增收入分类并展示。"""
@@ -31,6 +38,8 @@ def test_add_income_category(admin_login):
     expect(cat.row_by_name("理财")).to_contain_text("收入")
 
 
+@allure.feature("分类模块")
+@allure.story("新增")
 @pytest.mark.regression
 @pytest.mark.p1
 def test_add_duplicate_category(admin_login):
@@ -40,6 +49,8 @@ def test_add_duplicate_category(admin_login):
     expect(cat.page.get_by_test_id("cat-error")).to_have_text("分类名称已存在")
 
 
+@allure.feature("分类模块")
+@allure.story("新增")
 @pytest.mark.regression
 def test_add_empty_category(admin_login):
     """分类名称为空给出提示。"""
@@ -48,6 +59,8 @@ def test_add_empty_category(admin_login):
     expect(cat.page.get_by_test_id("cat-error")).to_have_text("分类名称不能为空")
 
 
+@allure.feature("分类模块")
+@allure.story("删除")
 @pytest.mark.regression
 def test_delete_category_without_bills(admin_login):
     """无账单引用的分类可删除。"""
@@ -58,6 +71,8 @@ def test_delete_category_without_bills(admin_login):
     cat.expect_row_count(5)
 
 
+@allure.feature("分类模块")
+@allure.story("删除")
 @pytest.mark.regression
 def test_delete_category_with_bills_fails(admin_api, admin_login):
     """存在账单引用的分类不可删除并给出提示。"""
@@ -70,6 +85,8 @@ def test_delete_category_with_bills_fails(admin_api, admin_login):
     cat.expect_row_count(6)
 
 
+@allure.feature("分类模块")
+@allure.story("新增")
 @pytest.mark.regression
 def test_new_category_in_bill_dropdown(admin_login):
     """新增分类后出现在记账表单下拉中。"""
@@ -80,6 +97,8 @@ def test_new_category_in_bill_dropdown(admin_login):
     assert any("旅行" in o for o in options)
 
 
+@allure.feature("分类模块")
+@allure.story("删除")
 @pytest.mark.regression
 def test_delete_category_removes_from_dropdown(admin_api, admin_login):
     """删除分类后从记账表单下拉中消失。"""

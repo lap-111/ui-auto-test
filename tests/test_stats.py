@@ -1,4 +1,5 @@
 """报表模块用例。"""
+import allure
 import pytest
 
 from api import factories as f
@@ -11,6 +12,8 @@ SEED_INCOME = 15000.0
 SEED_BALANCE = SEED_INCOME - SEED_EXPENSE
 
 
+@allure.feature("报表模块")
+@allure.story("月度统计")
 @pytest.mark.regression
 @pytest.mark.p0
 def test_stats_current_month(admin_login):
@@ -22,6 +25,8 @@ def test_stats_current_month(admin_login):
     assert stats.get_balance() == pytest.approx(SEED_BALANCE, abs=0.01)
 
 
+@allure.feature("报表模块")
+@allure.story("月度统计")
 @pytest.mark.regression
 def test_stats_last_month(admin_login):
     """切换上月统计正确。"""
@@ -31,6 +36,8 @@ def test_stats_last_month(admin_login):
     assert stats.get_expense() == pytest.approx(88.0, abs=0.01)
 
 
+@allure.feature("报表模块")
+@allure.story("月度统计")
 @pytest.mark.regression
 def test_stats_empty_month(admin_login):
     """无数据月份统计为 0。"""
@@ -41,6 +48,8 @@ def test_stats_empty_month(admin_login):
     assert stats.get_balance() == 0
 
 
+@allure.feature("报表模块")
+@allure.story("分类汇总")
 @pytest.mark.regression
 def test_stats_category_breakdown(admin_login):
     """分类汇总金额正确。"""
@@ -50,6 +59,8 @@ def test_stats_category_breakdown(admin_login):
     assert stats.category_total("工资") == pytest.approx(15000.0, abs=0.01)
 
 
+@allure.feature("报表模块")
+@allure.story("联动验证")
 @pytest.mark.regression
 @pytest.mark.p1
 def test_add_bill_reflects_in_stats(admin_api, admin_login):
@@ -62,6 +73,8 @@ def test_add_bill_reflects_in_stats(admin_api, admin_login):
     assert stats.get_expense() == pytest.approx(before["expense"] + 55.0, abs=0.01)
 
 
+@allure.feature("报表模块")
+@allure.story("联动验证")
 @pytest.mark.regression
 @pytest.mark.p1
 def test_edit_bill_reflects_in_stats(admin_api, admin_login):

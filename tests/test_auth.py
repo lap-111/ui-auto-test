@@ -1,4 +1,5 @@
 """用户模块用例。"""
+import allure
 import pytest
 from playwright.sync_api import expect
 
@@ -12,6 +13,8 @@ INVALID_LOGIN = AUTH_DATA["invalid_login"]
 INVALID_REGISTER = AUTH_DATA["invalid_register"]
 
 
+@allure.feature("用户模块")
+@allure.story("登录")
 @pytest.mark.smoke
 @pytest.mark.p0
 def test_login_success(admin_login):
@@ -19,6 +22,8 @@ def test_login_success(admin_login):
     expect(admin_login.get_by_test_id("app-username")).to_have_text("admin")
 
 
+@allure.feature("用户模块")
+@allure.story("登录")
 @pytest.mark.smoke
 @pytest.mark.p0
 def test_login_wrong_password(login_page):
@@ -27,6 +32,8 @@ def test_login_wrong_password(login_page):
     expect(login_page.page.get_by_test_id("login-error")).to_have_text("用户名或密码错误")
 
 
+@allure.feature("用户模块")
+@allure.story("登录")
 @pytest.mark.regression
 @pytest.mark.p0
 @pytest.mark.parametrize("case", INVALID_LOGIN, ids=lambda c: c["password"] or "empty")
@@ -36,6 +43,8 @@ def test_login_invalid_parametrized(login_page, case):
     expect(login_page.page.get_by_test_id("login-error")).to_have_text(case["error"])
 
 
+@allure.feature("用户模块")
+@allure.story("注册")
 @pytest.mark.regression
 def test_register_success(login_page):
     """注册新用户后自动登录进入主界面。"""
@@ -45,6 +54,8 @@ def test_register_success(login_page):
     expect(login_page.page.get_by_test_id("app-username")).to_have_text(username)
 
 
+@allure.feature("用户模块")
+@allure.story("注册")
 @pytest.mark.regression
 @pytest.mark.parametrize(
     "case",
@@ -59,6 +70,8 @@ def test_register_invalid(login_page, case):
     expect(page.get_by_test_id("register-error")).to_have_text(case["error"])
 
 
+@allure.feature("用户模块")
+@allure.story("登出")
 @pytest.mark.regression
 def test_logout(admin_login):
     """退出登录后回到登录页。"""
@@ -66,6 +79,8 @@ def test_logout(admin_login):
     expect(admin_login.get_by_test_id("login-submit")).to_be_visible()
 
 
+@allure.feature("用户模块")
+@allure.story("修改密码")
 @pytest.mark.regression
 @pytest.mark.p1
 def test_change_password_success(admin_login):
@@ -81,6 +96,8 @@ def test_change_password_success(admin_login):
     expect(page.get_by_test_id("app-username")).to_have_text("admin")
 
 
+@allure.feature("用户模块")
+@allure.story("修改密码")
 @pytest.mark.regression
 def test_change_password_wrong_old(admin_login):
     """原密码错误时修改失败。"""
@@ -92,6 +109,8 @@ def test_change_password_wrong_old(admin_login):
     expect(page.get_by_test_id("set-msg")).to_have_text("原密码错误")
 
 
+@allure.feature("用户模块")
+@allure.story("修改密码")
 @pytest.mark.regression
 def test_change_password_empty_new(admin_login):
     """新密码为空时修改失败。"""
@@ -102,6 +121,8 @@ def test_change_password_empty_new(admin_login):
     expect(page.get_by_test_id("set-msg")).to_have_text("新密码不能为空")
 
 
+@allure.feature("用户模块")
+@allure.story("登录")
 @pytest.mark.regression
 def test_index_requires_login(page, base_url):
     """未登录访问首页只展示登录卡片。"""
